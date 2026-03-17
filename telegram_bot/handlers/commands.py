@@ -1,4 +1,4 @@
-﻿from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, User as TelegramUser
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, User as TelegramUser
 from telegram.ext import ContextTypes, ConversationHandler
 from telegram.constants import ParseMode
 from utils.database_service import DatabaseService
@@ -165,7 +165,16 @@ async def view_listings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = f"📋 *Активные Задания* (стр. {page}/{total_pages})\n\n"
     
     for listing in page_listings:
-        customer_display = "Аноним" if listing.is_anonymous else f"@{listing.customer_id}"
+        if listing.is_anonymous:
+            customer_display = "Аноним"
+        else:
+            customer = service.get_user(listing.customer_id)
+            if customer and customer.username:
+                customer_display = f"@{customer.username}"
+            elif customer and customer.first_name:
+                customer_display = customer.first_name
+            else:
+                customer_display = f"ID: {listing.customer_id}"
         text += f"▫️ *{listing.title}*\n"
         text += f"  От: {customer_display}\n\n"
     
@@ -360,7 +369,16 @@ async def listing_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db.close()
         return
     
-    customer_display = "Аноним" if listing.is_anonymous else f"@{listing.customer_id}"
+    if listing.is_anonymous:
+        customer_display = "Аноним"
+    else:
+        customer = service.get_user(listing.customer_id)
+        if customer and customer.username:
+            customer_display = f"@{customer.username}"
+        elif customer and customer.first_name:
+            customer_display = customer.first_name
+        else:
+            customer_display = f"ID: {listing.customer_id}"
     
     detail_text = f"""
 📌 *{listing.title}*
