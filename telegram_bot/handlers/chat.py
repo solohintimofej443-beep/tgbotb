@@ -1,9 +1,9 @@
-﻿from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 from database.db import SessionLocal
 from utils.database_service import DatabaseService
-from utils.message_cleaner import mark_last_bot_message
+from utils.message_cleaner import mark_last_bot_message, send_clean_reply
 
 
 async def open_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -103,7 +103,13 @@ async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = context.user_data.get('current_chat_id')
     
     if not chat_id:
-        await update.message.reply_text("❌ Ошибка: чат не найден")
+        keyboard = [[InlineKeyboardButton("🏠 В главное меню", callback_data="back_to_menu")]]
+        await send_clean_reply(
+            update,
+            context,
+            "❌ Ошибка: чат не найден",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
         return
     
     db = SessionLocal()
@@ -111,7 +117,13 @@ async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = service.get_chat(chat_id)
     
     if not chat or user.id not in [chat.customer_id, chat.performer_id]:
-        await update.message.reply_text("❌ Ошибка: нет доступа к чату")
+        keyboard = [[InlineKeyboardButton("🏠 В главное меню", callback_data="back_to_menu")]]
+        await send_clean_reply(
+            update,
+            context,
+            "❌ Ошибка: нет доступа к чату",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
         db.close()
         return
     
